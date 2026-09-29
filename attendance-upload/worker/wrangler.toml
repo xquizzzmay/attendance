@@ -1,0 +1,13 @@
+# Сервер «Посещаемость». Как выложить — см. ../README.md
+name = "attendance"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Адрес сайта на GitHub Pages (без / в конце). Через запятую можно добавить ещё.
+ALLOWED_ORIGINS = "https://xquizmay.github.io"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "attendance"
+database_id = "2c2cc62d-dbc3-44c6-a4ca-825124acbaf3"
