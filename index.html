@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.workers.dev http://127.0.0.1:8787; base-uri 'none'; form-action 'none'">
+<title>Посещаемость</title>
+<meta name="theme-color" content="#1E4E8C">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<main class="wrap">
+
+  <!-- ===== Вход ===== -->
+  <section id="loginScreen" class="screen hidden">
+    <h1>Посещаемость</h1>
+    <p class="muted">Для старост групп</p>
+    <div class="tabs" id="loginTabs">
+      <button type="button" data-tab="login" class="on">Вход</button>
+      <button type="button" data-tab="register">Регистрация по ключу</button>
+    </div>
+
+    <form id="loginForm" class="card">
+      <label>Группа
+        <select id="loginGroup" required></select>
+      </label>
+      <label>Пароль
+        <input id="loginPass" type="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn" type="submit">Войти</button>
+      <p class="error" id="loginError"></p>
+    </form>
+
+    <form id="registerForm" class="card hidden">
+      <p class="muted small">Ключ выдаёт главный админ. Он одноразовый: после регистрации входите по своему паролю.</p>
+      <label>Ключ группы
+        <input id="regKey" type="text" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX-XXXX" required>
+      </label>
+      <label>Придумайте пароль (от 8 символов)
+        <input id="regPass" type="password" autocomplete="new-password" minlength="8" required>
+      </label>
+      <label>Повторите пароль
+        <input id="regPass2" type="password" autocomplete="new-password" minlength="8" required>
+      </label>
+      <button class="btn" type="submit">Зарегистрироваться</button>
+      <p class="error" id="regError"></p>
+    </form>
+
+    <details class="admin-entry">
+      <summary>Я главный админ</summary>
+      <form id="adminForm" class="card">
+        <label>Пароль админа
+          <input id="adminPass" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="btn" type="submit">Войти как админ</button>
+        <p class="error" id="adminError"></p>
+      </form>
+    </details>
+  </section>
+
+  <!-- ===== Главный админ: группы ===== -->
+  <section id="adminScreen" class="screen hidden">
+    <div class="topbar">
+      <strong>Главный админ</strong>
+      <button class="link" type="button" data-logout>выйти</button>
+    </div>
+    <h1>Группы</h1>
+
+    <form id="newGroupForm" class="card row">
+      <input id="newGroupName" type="text" maxlength="60" placeholder="Название группы, напр. ИТ-21" required>
+      <button class="btn" type="submit">Создать</button>
+    </form>
+    <p class="error" id="groupError"></p>
+
+    <div id="keyBox" class="keybox hidden">
+      <p>Ключ для старосты группы <b id="keyGroup"></b>:</p>
+      <div class="key" id="keyValue"></div>
+      <button class="btn small" type="button" id="copyKey">Скопировать</button>
+      <p class="muted small">Ключ показывается один раз. Отправьте его старосте — он зарегистрируется и придумает свой пароль.</p>
+    </div>
+
+    <div id="groupList" class="list"></div>
+  </section>
+
+  <!-- ===== Группа ===== -->
+  <section id="groupScreen" class="screen hidden">
+    <div class="topbar">
+      <button class="link hidden" type="button" id="toGroups">← все группы</button>
+      <strong id="groupTitle"></strong>
+      <button class="link" type="button" data-logout>выйти</button>
+    </div>
+    <div class="tabs" id="groupTabs">
+      <button type="button" data-tab="mark" class="on">Отметки</button>
+      <button type="button" data-tab="students">Ученики</button>
+      <button type="button" data-tab="report">Итог недели</button>
+    </div>
+
+    <!-- Отметки -->
+    <div id="tab-mark">
+      <div class="daynav">
+        <button class="navbtn" type="button" id="dayPrev" aria-label="Предыдущий день">‹</button>
+        <div class="daylabel" id="dayLabel"></div>
+        <button class="navbtn" type="button" id="dayNext" aria-label="Следующий день">›</button>
+      </div>
+      <div class="pairs" id="pairList"></div>
+      <p class="notice hidden" id="markLocked"></p>
+      <div class="markbar">
+        <span class="muted small" id="markCount"></span>
+        <button class="btn small" type="button" id="allPlus">Все +</button>
+      </div>
+      <div id="markList" class="list"></div>
+      <p class="muted small" id="saveState"></p>
+    </div>
+
+    <!-- Ученики -->
+    <div id="tab-students" class="hidden">
+      <form id="addStudentForm" class="card row">
+        <input id="studentName" type="text" maxlength="80" placeholder="Фамилия Имя" required>
+        <button class="btn" type="submit">Добавить</button>
+      </form>
+      <p class="error" id="studentError"></p>
+      <div id="studentList" class="list"></div>
+      <div class="card settings">
+        <label>Пар в день
+          <select id="pairsPerDay"></select>
+        </label>
+      </div>
+    </div>
+
+    <!-- Итог недели -->
+    <div id="tab-report" class="hidden">
+      <div class="daynav">
+        <button class="navbtn" type="button" id="weekPrev" aria-label="Предыдущая неделя">‹</button>
+        <div class="daylabel" id="weekLabel"></div>
+        <button class="navbtn" type="button" id="weekNext" aria-label="Следующая неделя">›</button>
+      </div>
+      <p class="notice" id="reportStatus"></p>
+      <div id="reportTop"></div>
+      <div class="tablewrap"><table id="reportTable"></table></div>
+      <p class="muted small">− пропущено пар · + был на парах · в днях: по порядку пар, «·» — пара не отмечена</p>
+      <button class="btn small" type="button" id="reportCsv">Скачать таблицу (CSV для Excel)</button>
+    </div>
+  </section>
+
+</main>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
